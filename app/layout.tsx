@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/assets/styles/globals.css";
+import { APP_NAME, SERVER_URL, APP_DESCRIPTION } from "@/lib/constants";
 
 const inter = Inter({
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "E-Store",
-  description: "A modern ecommerce platform",
+  title: {
+    template: `%s | E-Store`,
+    default: APP_NAME,
+  },
+  description: APP_DESCRIPTION,
+  metadataBase: new URL(SERVER_URL),
 };
 
 export default function RootLayout({

@@ -4,6 +4,7 @@
 
 @layer utilities {
   .wrapper {
+    /* why add lg:mx-auto? when the width of screen is narrow than large size, then it's narrow than max-w-7xl, and we don't need to center it, only when the screen is wider, we need center it. */
     @apply max-w-7xl lg:mx-auto p-5 md:px-10 w-full;
   }
 
@@ -92,8 +93,6 @@
     @apply bg-background text-foreground;
   }
 }
-
-
 
 @layer base {
   * {
