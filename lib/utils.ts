@@ -6,8 +6,16 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // convert prisma object into a regular JS object;
-export function converToPlainObject<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value));
+export function converToPlainObject<T>(data: T) {
+  return JSON.parse(
+    JSON.stringify(data, (key, value) =>
+      typeof value === "object" &&
+      value !== null &&
+      typeof value.toJSON === "function"
+        ? value.toJSON()
+        : value
+    )
+  );
 }
 
 // format number with decimal places
