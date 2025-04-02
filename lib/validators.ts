@@ -38,3 +38,31 @@ export const signUpFormSchema = z
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
+
+// Item Schema (A Cart will have many items)
+export const cartItemSchema = z.object({
+  productId: z.string().min(1, "Product ID is required!"),
+  name: z.string().min(1, "Name is required!"),
+  slug: z.string().min(1, "Slug is required!"),
+  qty: z.number().int().nonnegative("Quantity must be a non-negative number!"),
+  image: z.string().min(1, "Image is required!"),
+  price: z
+    .number()
+    .refine(
+      (value) => /^\d+(\.\d{2})?$/.test(Number(value).toFixed(2)),
+      "Price must have exactly two decimal places (e.g., 49.99)"
+    ),
+});
+
+// Cart schema ( schema for cart it self)
+export const insertCartSchema = z.object({
+  items: z.array(cartItemSchema),
+  itemsPrice: currency,
+  totalPrice: currency,
+  shippingPrice: currency,
+  taxPrice: currency,
+  sessionCartId: z.string().min(1, "Session cart id is required!"),
+  // optional() means it accept undefined value, but null is not ok;
+  // nullable() means it accept null value, but undefined is not ok
+  userId: z.string().optional().nullable(),
+});

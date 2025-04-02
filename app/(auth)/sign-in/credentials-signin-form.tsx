@@ -15,6 +15,7 @@ const CredentialsSignInForm = () => {
   // 在这里获取callbackUrl是为了在action中跳转用，当前还未用到
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 
+  // from React 19, recommend useActionState instead of useFormState;
   const [data, action] = useActionState(signInWithCredentials, {
     success: false,
     message: "",
