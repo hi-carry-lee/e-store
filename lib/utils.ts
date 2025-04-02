@@ -34,3 +34,77 @@ export function formatNumberWithDecimal(num: number): string {
   const [int, decimal] = num.toString().split(".");
   return decimal ? `${int}.${decimal.padEnd(2, "0")}` : `${int}.00}`;
 }
+
+// Format Errors
+// when deploy to vercel, it will throw an error, so we disable eslint here
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function formatError(error: any): string {
+  if (error.name === "ZodError") {
+    // Handle Zod error
+    const fieldErrors = Object.keys(error.errors).map((field) => {
+      const message = error.errors[field].message;
+      return typeof message === "string" ? message : JSON.stringify(message);
+    });
+
+    return fieldErrors.join(". ");
+  } else if (
+    error.name === "PrismaClientKnownRequestError" &&
+    error.code === "P2002" // P2002 is Postgresql specified error
+  ) {
+    // Handle Prisma error
+    const field = error.meta?.target ? error.meta.target[0] : "Field";
+    return `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`;
+  } else {
+    // Handle other errors
+    return typeof error.message === "string"
+      ? error.message
+      : JSON.stringify(error.message);
+  }
+}
+/*
+通过这种方式，获取catch中的error信息，然后写出上面的格式化错误数据的函数
+console.log(error.name);
+console.log(error.code);
+console.log(error.errors);
+console.log(error.meta?.target)
+*/
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function formatErrorPlus(error: any): {
+  fieldErrors: Record<string, string>;
+  generalError?: string;
+} {
+  if (error.name === "ZodError") {
+    // 处理Zod错误，将每个字段的错误分别存储
+    const fieldErrors: Record<string, string> = {};
+
+    for (const issue of error.errors) {
+      const field = issue.path[0];
+      fieldErrors[field] = issue.message;
+    }
+
+    return { fieldErrors };
+  } else if (
+    error.name === "PrismaClientKnownRequestError" &&
+    error.code === "P2002"
+  ) {
+    // 处理Prisma唯一性约束错误
+    const field = error.meta?.target ? error.meta.target[0] : "field";
+    return {
+      fieldErrors: {
+        [field]: `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } already exists`,
+      },
+    };
+  } else {
+    // 处理其他一般性错误
+    return {
+      fieldErrors: {},
+      generalError:
+        typeof error.message === "string"
+          ? error.message
+          : JSON.stringify(error.message),
+    };
+  }
+}
