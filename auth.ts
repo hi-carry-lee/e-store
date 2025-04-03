@@ -3,12 +3,12 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/db/prisma";
 import Credentials from "next-auth/providers/credentials";
 import { compareSync } from "bcrypt-ts-edge";
+import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: {
-    strategy: "jwt", // 或 "database"
-    maxAge: 30 * 24 * 60 * 60, // 30天
+    strategy: "jwt" as const,
   },
   pages: {
     signIn: "sign-in",
@@ -49,6 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user, trigger, session }) {
       // Assign user fields to token
       if (user) {
