@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // convert prisma object into a regular JS object;
-export function converToPlainObject<T>(data: T) {
+export function convertToPlainObject<T>(data: T) {
   return JSON.parse(
     JSON.stringify(data, (key, value) =>
       typeof value === "object" &&
@@ -32,7 +32,14 @@ original code "return JSON.parse(JSON.stringify(value));" can't convert the Pris
 // format number with decimal places
 export function formatNumberWithDecimal(num: number): string {
   const [int, decimal] = num.toString().split(".");
-  return decimal ? `${int}.${decimal.padEnd(2, "0")}` : `${int}.00}`;
+
+  if (!decimal) {
+    return `${int}.00`;
+  }
+
+  // 截取前两位小数，不足两位则用0填充
+  const formattedDecimal = decimal.substring(0, 2).padEnd(2, "0");
+  return `${int}.${formattedDecimal}`;
 }
 
 // Format Errors
@@ -49,7 +56,7 @@ export function formatError(error: any): string {
     return fieldErrors.join(". ");
   } else if (
     error.name === "PrismaClientKnownRequestError" &&
-    error.code === "P2002" // P2002 is Postgresql specified error
+    error.code === "P2002" // P2002 is Prisma specified error
   ) {
     // Handle Prisma error
     const field = error.meta?.target ? error.meta.target[0] : "Field";
@@ -108,3 +115,21 @@ export function formatErrorPlus(error: any): {
     };
   }
 }
+
+// Round to 2 decimal places
+export const round2 = (value: number | string) => {
+  if (typeof value !== "number" && typeof value !== "string") {
+    throw new Error("value is not a number nor a string");
+  }
+
+  const num = typeof value === "number" ? value : Number(value);
+
+  // 分别处理正负数情况
+  const multiplier = 100;
+  if (num >= 0) {
+    return Math.round((num + Number.EPSILON) * multiplier) / multiplier;
+  } else {
+    // 负数情况：处理符号，对绝对值四舍五入，再恢复符号
+    return -Math.round((-num + Number.EPSILON) * multiplier) / multiplier;
+  }
+};
