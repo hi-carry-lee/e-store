@@ -8,6 +8,7 @@ import { convertToPlainObject, formatError, round2 } from "../utils";
 import { auth } from "@/auth";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 
 // Calculate cart price based on items
 const calcPrice = (items: CartItem[]) => {
@@ -67,7 +68,6 @@ export const addItemToCart = async (data: CartItem) => {
       });
 
       // Revalidate product page
-      // !update stock number
       revalidatePath(`/product/${product.slug}`);
 
       return {
@@ -93,9 +93,7 @@ export const addItemToCart = async (data: CartItem) => {
         }
 
         // Increase quantity of existing item
-        (cart.items as CartItem[]).find(
-          (x) => x.productId === item.productId
-        )!.qty = existItem.qty + 1;
+        existItem.qty = existItem.qty + 1;
       } else {
         // If stock, add item to cart
         if (product.stock < 1) throw new Error("Not enough stock");
@@ -155,5 +153,58 @@ export async function getMyCart() {
   // });
 
   // since I have override convertToPlainObject, no need to desctructure param
+  // !conver prisma object to plain js object
   return convertToPlainObject(cart);
+}
+
+export async function removeItemFromCart(productId: string) {
+  try {
+    // Get product
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    // Get user cart
+    const cart = await getMyCart();
+    if (!cart) {
+      throw new Error("Cart not found!");
+    }
+
+    // Check for items
+    const cartItemExist = (cart.items as CartItem[]).find(
+      (x) => x.productId === productId
+    );
+    if (!cartItemExist) {
+      throw new Error("Cart Item not found!");
+    }
+
+    // Check if only one quantity
+    if (cartItemExist.qty === 1) {
+      cart.items = (cart.items as CartItem[]).filter(
+        (x) => x.productId !== productId
+      );
+    } else {
+      (cart.items as CartItem[]).find((x) => x.productId === productId)!.qty =
+        cartItemExist.qty - 1;
+    }
+
+    await prisma.cart.update({
+      where: { id: cart.id },
+      data: {
+        items: cart.items as Prisma.CartUpdateitemsInput[],
+        ...calcPrice(cart.items as CartItem[]),
+      },
+    });
+
+    revalidatePath(`/product/${product.slug}`);
+    return { success: true, message: `${product.name} was removed from cart!` };
+  } catch (error) {
+    return {
+      success: false,
+      message: formatError(error),
+    };
+  }
 }

@@ -31,13 +31,15 @@ original code "return JSON.parse(JSON.stringify(value));" can't convert the Pris
 
 // format number with decimal places
 export function formatNumberWithDecimal(num: number): string {
+  // * convert to string, then split it into two parts
   const [int, decimal] = num.toString().split(".");
 
+  // if no decimal part, then return directly;
   if (!decimal) {
     return `${int}.00`;
   }
 
-  // 截取前两位小数，不足两位则用0填充
+  // intercept first two number,
   const formattedDecimal = decimal.substring(0, 2).padEnd(2, "0");
   return `${int}.${formattedDecimal}`;
 }
@@ -76,6 +78,8 @@ console.log(error.errors);
 console.log(error.meta?.target)
 */
 
+// ------------------------------------------------
+// !For form field error
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatErrorPlus(error: any): {
   fieldErrors: Record<string, string>;
