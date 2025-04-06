@@ -6,6 +6,7 @@ import RemoveFromCartButton from "./remove-from-cart-button";
 import AddToCartButton from "./add-to-cart-button";
 
 const AddToCart = ({ cart, item }: { cart?: Cart; item: CartItem }) => {
+  // ! only Client component
   const router = useRouter();
 
   const existItem =

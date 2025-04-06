@@ -66,3 +66,14 @@ export const insertCartSchema = z.object({
   // nullable() means it accept null value, but undefined is not ok
   userId: z.string().optional().nullable(),
 });
+
+// Schema for shipping address
+export const shippingAddressSchema = z.object({
+  fullName: z.string().min(1, "Full name is required!"),
+  streetAddress: z.string().min(1, "Address is required!"),
+  city: z.string().min(1, "City is required!"),
+  postalCode: z.string().min(1, "Postal Code is required!"),
+  country: z.string().min(1, "Country is required!"),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+});

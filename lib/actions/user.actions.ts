@@ -1,11 +1,16 @@
 "use server";
 
-import { signInFormSchema, signUpFormSchema } from "../validators";
-import { signIn, signOut } from "@/auth";
+import {
+  shippingAddressSchema,
+  signInFormSchema,
+  signUpFormSchema,
+} from "../validators";
+import { auth, signIn, signOut } from "@/auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { hashSync } from "bcrypt-ts-edge";
 import { prisma } from "@/db/prisma";
-import { formatErrorPlus } from "../utils";
+import { formatError, formatErrorPlus } from "@/lib/utils";
+import { ShippingAddress } from "@/types";
 
 /*
   Why user this params? since we will use this action in the useFormState hook, it requires these params
@@ -80,5 +85,42 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
       fieldErrors,
       generalError: generalError || "注册失败",
     };
+  }
+}
+
+// Get user by id
+export async function getUserById(userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new Error("User not found!");
+  }
+  return user;
+}
+
+// Update the user's address
+// ! address is just a field of user table;
+export async function updateUserAddress(data: ShippingAddress) {
+  try {
+    const session = await auth();
+
+    const currentUser = await prisma.user.findFirst({
+      where: { id: session?.user?.id },
+    });
+
+    if (!currentUser) throw new Error("User not found");
+
+    const address = shippingAddressSchema.parse(data);
+
+    await prisma.user.update({
+      where: { id: currentUser.id },
+      data: { address },
+    });
+
+    return {
+      success: true,
+      message: "User updated successfully",
+    };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
   }
 }
