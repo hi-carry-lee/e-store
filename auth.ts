@@ -4,6 +4,7 @@ import { prisma } from "@/db/prisma";
 import Credentials from "next-auth/providers/credentials";
 import { compareSync } from "bcrypt-ts-edge";
 import { authConfig } from "./auth.config";
+import { cookies } from "next/headers";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -11,8 +12,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt" as const,
   },
   pages: {
-    signIn: "sign-in",
-    error: "sign-in",
+    signIn: "/sign-in", // *it's a url, so it must start with "/"
+    error: "/sign-in",
   },
   providers: [
     Credentials({
@@ -65,6 +66,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             where: { id: user.id },
             data: { name: token.name },
           });
+        }
+        if (trigger === "signIn" || trigger === "signUp") {
+          const cookiesObject = await cookies();
+          const sessionCartId = cookiesObject.get("sessionCartId")?.value;
+
+          if (sessionCartId) {
+            const sessionCart = await prisma.cart.findFirst({
+              where: { sessionCartId },
+            });
+
+            if (sessionCart) {
+              /*
+                ?why?
+               *Reasons for this approach:
+               *1. Conflict resolution: Prevents multiple carts per user, simplifying data model
+               *2. Priority policy: Guest cart takes precedence over existing user cart
+               *3. UX continuity: User expects to see items added before login
+               *4. Data integrity: Prevents checkout and inventory management issues
+               */
+              // Overwrite any existing user cart
+              await prisma.cart.deleteMany({
+                where: { userId: user.id },
+              });
+
+              // ?why?
+              // *Assign guest cart to authenticated user
+              // *This approach is standard e-commerce practice because:
+              // *- Recent shopping intent better reflects current user needs
+              // *- Simplifies implementation vs complex merge strategies
+              // *- Provides predictable user experience
+              // Assign the guest cart to the logged-in user
+              await prisma.cart.update({
+                where: { id: sessionCart.id },
+                data: { userId: user.id },
+              });
+            }
+          }
         }
       }
 
