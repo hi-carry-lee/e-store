@@ -1,7 +1,7 @@
 "use server";
 
 import { isRedirectError } from "next/dist/client/components/redirect-error";
-import { formatError } from "../utils";
+import { convertToPlainObject, formatError } from "../utils";
 import { auth } from "@/auth";
 import { getMyCart } from "./cart.actions";
 import { getUserById } from "./user.actions";
@@ -87,7 +87,7 @@ export async function createOrder() {
           itemsPrice: 0,
         },
       });
-
+      // since we need order id, so we return it, and it should match the Promise<string>
       return insertedOrder.id;
     });
 
@@ -102,4 +102,16 @@ export async function createOrder() {
     if (isRedirectError(error)) throw error;
     return { success: false, message: formatError(error) };
   }
+}
+
+export async function getOrderById(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      orderItems: true,
+      user: { select: { email: true, name: true } },
+    },
+  });
+
+  return convertToPlainObject(order);
 }
