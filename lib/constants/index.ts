@@ -22,9 +22,9 @@ export const shippingAddressDefaultValues = {
 };
 
 export const PAYMENT_METHODS = process.env.PAYMENT_METHODS?.split(", ") || [
-  "Paypal",
+  "PayPal",
   "Stripe",
   "CashOnDelivery",
 ];
 export const DEFAULT_PAYMENT_METHOD =
-  process.env.DEFAULT_PAYMENT_METHOD || "Stripe";
+  process.env.DEFAULT_PAYMENT_METHOD || "PayPal";
