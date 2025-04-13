@@ -11,6 +11,7 @@ import { prisma } from "@/db/prisma";
 import { Prisma } from "@prisma/client";
 import { paypal } from "@/lib/paypal";
 import { revalidatePath } from "next/cache";
+import { PAGE_SIZE } from "../constants";
 
 // Create order and create order items
 export async function createOrder() {
@@ -163,8 +164,8 @@ export async function approvePayPalOrder(
     });
     if (!order) throw new Error("Order not found");
 
-    // SResult Check: Check if the order is already paid
-    // transfe money from customer to seller
+    // Result Check: Check if the order is already paid
+    // transfer money from the customer to the seller
     const captureData = await paypal.capturePayment(data.orderID);
     if (
       !captureData ||
@@ -173,8 +174,8 @@ export async function approvePayPalOrder(
     )
       throw new Error("Error in paypal payment");
 
-    //  @todo - Update order to paid
-    updateOrderToPaid({
+    // ! forget to use await, so after payment is done, it can't refresh the page, then payment button is still there.
+    await updateOrderToPaid({
       orderId,
       paymentResult: {
         id: captureData.id,
@@ -248,12 +249,49 @@ async function updateOrderToPaid({
       id: orderId,
     },
     include: {
-      orderitems: true,
+      orderItems: true,
       user: { select: { name: true, email: true } },
     },
   });
 
   if (!updatedOrder) {
     throw new Error("Order not found");
+  }
+}
+
+export async function getMyOrders({
+  limit = PAGE_SIZE,
+  page = 1,
+}: {
+  limit?: number;
+  page?: number;
+}) {
+  try {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) throw new Error("User  is not authenticated");
+
+    const orders = await prisma.order.findMany({
+      where: { userId },
+      include: {
+        orderItems: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+
+    const dataCount = await prisma.order.count({
+      where: { userId },
+    });
+
+    return {
+      success: true,
+      message: "Orders fetched successfully",
+      data: convertToPlainObject(orders),
+      totalPages: Math.ceil(dataCount / limit),
+    };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
   }
 }

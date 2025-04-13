@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import qs from "query-string";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -199,3 +200,31 @@ export const formatDateTime = (dateString: Date) => {
     timeOnly: formattedTime,
   };
 };
+
+// Form Pagination Links
+export function formUrlQuery({
+  params,
+  key,
+  value,
+  pathname,
+}: {
+  params: string;
+  key: string;
+  value: string | null;
+  pathname: string;
+}) {
+  const query = qs.parse(params);
+
+  query[key] = value;
+
+  return qs.stringifyUrl(
+    {
+      // url: window.location.pathname,
+      url: pathname, // 使用传入的pathname,而非window.location.pathname
+      query,
+    },
+    { skipNull: true }
+  );
+}
+// ! 使用 window.location.pathname 的问题：在Next.js中，组件首先在服务器端渲染，但window对象只在浏览器环境中可用
+// ! why 使用传入的pathname能解决问题？

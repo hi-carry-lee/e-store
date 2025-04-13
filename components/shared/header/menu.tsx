@@ -21,11 +21,6 @@ const Menu = () => {
             <ShoppingCart /> Cart
           </Link>
         </Button>
-        {/* <Button asChild>
-          <Link href="/sign-in">
-            <UserIcon /> Sign In
-          </Link>
-        </Button> */}
         <UserButton />
       </nav>
       <nav className="md:hidden">
@@ -42,7 +37,7 @@ const Menu = () => {
               </Link>
             </Button>
             <UserButton />
-            {/* need to keep this empty component */}
+            {/* must exists, but can keep this empty */}
             <SheetDescription></SheetDescription>
           </SheetContent>
         </Sheet>
