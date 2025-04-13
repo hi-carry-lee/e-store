@@ -26,15 +26,16 @@ const OrderTables = ({
     <div className="space-y-2">
       <h2 className="h2-bold">Orders</h2>
       <div className="overflow-x-auto">
-        <Table>
+        <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>Id</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Paid</TableHead>
-              <TableHead>Delivered</TableHead>
-              <TableHead>Actions</TableHead>
+              {/* 为每列设置固定宽度 */}
+              <TableHead className="w-[15%]">Id</TableHead>
+              <TableHead className="w-[20%]">Date</TableHead>
+              <TableHead className="w-[15%]">Total</TableHead>
+              <TableHead className="w-[15%]">Paid</TableHead>
+              <TableHead className="w-[20%]">Delivered</TableHead>
+              <TableHead className="w-[15%]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

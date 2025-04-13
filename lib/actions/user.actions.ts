@@ -155,3 +155,90 @@ export async function updateUserPaymentMethod(
     return { success: false, message: formatError(error) };
   }
 }
+
+// * A new version of update user profile
+/**
+ * 更新用户资料
+ * 安全性：
+ * 1. 使用auth()验证用户已登录
+ * 2. 确保只能更新自己的资料
+ * 3. 只允许更新特定字段（当前只允许name）
+ */
+export async function updateUserProfile(userData: {
+  name: string;
+  email: string;
+}) {
+  try {
+    // 再次验证用户会话（即使有middleware保护）
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "User not authenticated",
+      };
+    }
+
+    // 确认用户存在且正在更新自己的资料
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+    });
+
+    if (!currentUser) {
+      return {
+        success: false,
+        message: "User not found",
+      };
+    }
+
+    // ! Current we don't allow to update email, so we have this check;
+    if (userData.email !== currentUser.email) {
+      return {
+        success: false,
+        message: "Cannot change email address",
+      };
+    }
+
+    // 执行更新操作，只允许更新name字段
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { name: userData.name },
+    });
+
+    return {
+      success: true,
+      message: "User profile updated successfully",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: formatError(error),
+    };
+  }
+}
+
+// original solution
+export async function updateUserProfile_1(user: {
+  name: string;
+  email: string;
+}) {
+  try {
+    const session = await auth();
+    const currentUser = await prisma.user.findFirst({
+      where: { id: session?.user?.id },
+    });
+    if (!currentUser) throw new Error("User not found");
+
+    await prisma.user.update({
+      where: { id: currentUser.id },
+      data: { name: user.name },
+    });
+
+    return {
+      success: true,
+      message: "User profile updated successfully",
+    };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
+}
