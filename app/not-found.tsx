@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import logo from "@/public/images/logo.svg";
 import Link from "next/link";
+import BackButton from "@/components/back-button";
 
 const NotFound = () => {
   return (
@@ -23,9 +24,12 @@ const NotFound = () => {
         <p className="text-destructive dark:text-red-400">
           Could not find requested resource
         </p>
-        <Button variant="outline" className="mt-4 ml-2 dark:hover:bg-gray-700">
-          <Link href="/">Back to home</Link>
-        </Button>
+        <div className="flex justify-center gap-2 mt-4">
+          <Button variant="outline" className="dark:hover:bg-gray-700">
+            <Link href="/">Back to home</Link>
+          </Button>
+          <BackButton />
+        </div>
       </div>
     </div>
   );

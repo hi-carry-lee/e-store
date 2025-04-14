@@ -156,6 +156,14 @@ export function formatCurrency(amount: number | string | null) {
   }
 }
 
+//  Format Numbers
+// Intl.NumberFormat 是 JavaScript 国际化 API (Internationalization API) 的一个重要组成部分，
+// 专门用于根据特定的区域设置（locale）格式化数字: formatter.format(1234567.89); 返回 "1,234,567.89"
+const NUMBER_FORMATTER = new Intl.NumberFormat("en-US");
+export function formatNumber(number: number) {
+  return NUMBER_FORMATTER.format(number);
+}
+
 // Short order id
 export function formatId(id: string) {
   return `..${id.substring(id.length - 6)}`;

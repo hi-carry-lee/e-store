@@ -295,3 +295,51 @@ export async function getMyOrders({
     return { success: false, message: formatError(error) };
   }
 }
+
+type SalesDataType = {
+  month: string;
+  totalSales: number;
+}[];
+
+export async function getOrderSummary() {
+  // get counts for each resources
+  const usersCount = await prisma.user.count();
+  const productsCount = await prisma.product.count();
+  const ordersCount = await prisma.order.count();
+
+  // calculate the total sales
+  const totalSales = await prisma.order.aggregate({
+    _sum: {
+      totalPrice: true,
+    },
+  });
+
+  // Get monthly sales
+  // 在 PostgreSQL 中，当你使用不带双引号的别名时，别名会被自动转换为小写：
+  // 所以，as totalSales会被转换为totalsales，应该加上引号
+  const salesDataRaw =
+    await prisma.$queryRaw<SalesDataType>`select to_char("createdAt", 'MM/YY') as month, sum("totalPrice") as "totalSales" from "Order" group by month`;
+
+  const salesData = salesDataRaw.map((item) => ({
+    month: item.month,
+    totalSales: Number(item.totalSales),
+  }));
+
+  // Get the latest 6 orders
+  const latestSales = await prisma.order.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { name: true } },
+    },
+    take: 6,
+  });
+
+  return {
+    usersCount,
+    productsCount,
+    ordersCount,
+    totalSales,
+    salesData,
+    latestSales,
+  };
+}
