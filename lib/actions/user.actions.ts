@@ -44,7 +44,10 @@ export async function signInWithCredentials(
 }
 
 export async function signOutUser() {
-  await signOut();
+  await signOut({
+    redirect: true,
+    redirectTo: "/sign-in", // 明确指定重定向到登录页面
+  });
 }
 
 export async function signUpUser(prevState: unknown, formData: FormData) {

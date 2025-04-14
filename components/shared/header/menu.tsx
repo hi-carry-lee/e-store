@@ -10,8 +10,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import UserButton from "./user-button";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
 
-const Menu = () => {
+const Menu = async () => {
+  const session = await auth();
   return (
     <div className="flex justify-end gap-3">
       <nav className="hidden md:flex w-full max-w-xs gap-1">
@@ -21,7 +24,9 @@ const Menu = () => {
             <ShoppingCart /> Cart
           </Link>
         </Button>
-        <UserButton />
+        <SessionProvider session={session}>
+          <UserButton />
+        </SessionProvider>
       </nav>
       <nav className="md:hidden">
         <Sheet>

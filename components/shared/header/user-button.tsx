@@ -1,8 +1,10 @@
-import { auth } from "@/auth";
+"use client";
+
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { UserIcon } from "lucide-react";
-import { signOutUser } from "@/lib/actions/user.actions";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -10,19 +12,29 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { signOutUser } from "@/lib/actions/user.actions";
 
-const UserButton = async () => {
-  const session = await auth();
+const UserButton = () => {
+  const { data: session } = useSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // 获取当前完整路径（包括查询参数）
+  const currentPath =
+    searchParams.size > 0 ? `${pathname}?${searchParams.toString()}` : pathname;
+
   if (!session) {
     return (
       <Button asChild>
-        <Link href="/sign-in">
+        <Link href={`/sign-in?callbackUrl=${encodeURIComponent(currentPath)}`}>
           <UserIcon /> Sign In
         </Link>
       </Button>
     );
   }
+
   const firstInitial = session.user?.name?.charAt(0).toUpperCase() ?? "";
+
   return (
     <div className="flex gap-2 items-center">
       <DropdownMenu>
@@ -66,14 +78,13 @@ const UserButton = async () => {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className="p-0 mb-1">
-            <form action={signOutUser} className="w-full">
-              <Button
-                className="w-full py-4 px-2 h-4 justify-start"
-                variant="ghost"
-              >
-                Sign Out
-              </Button>
-            </form>
+            <Button
+              onClick={signOutUser}
+              className="w-full py-4 px-2 h-4 justify-start"
+              variant="ghost"
+            >
+              Sign Out
+            </Button>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
