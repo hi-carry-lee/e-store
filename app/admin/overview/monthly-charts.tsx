@@ -7,14 +7,19 @@ const MonthlyCharts = ({
 }: {
   data: { salesData: { month: string; totalSales: number }[] };
 }) => {
-  console.log(salesData);
+  // 按月份排序
+  const sortedSalesData = salesData.sort((a, b) => {
+    const dateA = new Date(a.month);
+    const dateB = new Date(b.month);
+    return dateA.getTime() - dateB.getTime();
+  });
   return (
     <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={salesData}>
+      <BarChart data={sortedSalesData}>
         <XAxis
           dataKey="month"
           stroke="#888888"
-          fontSize={12}
+          fontSize={14}
           // 显示刻度线
           tickLine={true}
           // 显示轴线

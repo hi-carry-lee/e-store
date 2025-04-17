@@ -29,6 +29,7 @@ const OrderDetailsPage = async (props: {
       }}
       // sb stand for sandbox
       paypalClientId={process.env.PAYPAL_CLIENT_ID || "sb"}
+      isAdmin={session?.user.role === "admin" || false}
     />
   );
 };
