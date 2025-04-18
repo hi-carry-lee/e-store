@@ -37,7 +37,7 @@ const AdminOverviewPage = async () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(summary.totalSales._sum.totalPrice!.toString())}
+              {formatCurrency(Number(summary.totalSales._sum.totalPrice))}
             </div>
           </CardContent>
         </Card>
