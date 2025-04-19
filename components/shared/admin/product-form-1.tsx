@@ -21,27 +21,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createProduct, updateProduct } from "@/lib/actions/product.actions";
-import {
-  UploadButton as UploadThingButton,
-  useUploadThing,
-} from "@/lib/uploadthing";
+import { UploadButton } from "@/lib/uploadthing";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useCallback, useState, useRef } from "react";
-import { Upload, CloudUpload } from "lucide-react";
+import { useState } from "react";
 
-interface ProductFormProps {
+const ProductForm1 = ({
+  type,
+  product,
+  productId,
+}: {
   type: "Create" | "Update";
   product?: Product;
   productId?: string;
-}
-
-const ProductForm = ({ type, product, productId }: ProductFormProps) => {
+}) => {
   const router = useRouter();
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const schema = type === "Update" ? updateProductSchema : insertProductSchema;
   type FormValues = z.infer<typeof schema>;
@@ -52,87 +49,55 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
       product && type === "Update" ? product : productDefaultValues,
   });
 
+  const onSubmit: SubmitHandler<FormValues> = async (values) => {
+    // On Create
+    if (type === "Create") {
+      const res = await createProduct(values);
+
+      if (!res.success) {
+        toast({
+          variant: "destructive",
+          description: res.message,
+        });
+      } else {
+        toast({
+          description: res.message,
+        });
+        router.push("/admin/products");
+      }
+    }
+
+    // On Update
+    if (type === "Update") {
+      if (!productId) {
+        router.push("/admin/products");
+        return;
+      }
+
+      const res = await updateProduct({ ...values, id: productId });
+
+      if (!res.success) {
+        toast({
+          variant: "destructive",
+          description: res.message,
+        });
+      } else {
+        toast({
+          description: res.message,
+        });
+        router.push("/admin/products");
+      }
+    }
+  };
+
   const images = form.watch("images");
   const isFeatured = form.watch("isFeatured");
   const banner = form.watch("banner");
 
-  const { startUpload, isUploading } = useUploadThing("imageUploader", {
-    onClientUploadComplete: (res: { url: string }[]) => {
-      if (res) {
-        const newImageUrls = res.map((file: { url: string }) => file.url);
-        form.setValue("images", [...images, ...newImageUrls]);
-        setFiles([]);
-      }
-    },
-    onUploadError: (error: Error) => {
-      toast({
-        variant: "destructive",
-        description: `ERROR! ${error.message}`,
-      });
-    },
-  });
-
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    setFiles((prev) => [...prev, ...acceptedFiles]);
-  }, []);
-
-  const removeFile = useCallback((index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  }, []);
-
-  const removeImage = useCallback(
-    (index: number) => {
-      const newImages = [...images];
-      newImages.splice(index, 1);
-      form.setValue("images", newImages);
-    },
-    [images, form]
-  );
-
-  const onSubmit: SubmitHandler<FormValues> = async (values) => {
-    try {
-      if (type === "Create") {
-        const res = await createProduct(values);
-        if (!res.success) {
-          toast({
-            variant: "destructive",
-            description: res.message,
-          });
-          return;
-        }
-        toast({
-          description: res.message,
-        });
-        router.push("/admin/products");
-        return;
-      }
-
-      if (type === "Update" && productId) {
-        const res = await updateProduct({ ...values, id: productId });
-        if (!res.success) {
-          toast({
-            variant: "destructive",
-            description: res.message,
-          });
-          return;
-        }
-        toast({
-          description: res.message,
-        });
-        router.push("/admin/products");
-        return;
-      }
-
-      router.push("/admin/products");
-    } catch {
-      toast({
-        variant: "destructive",
-        description: "An unexpected error occurred. Please try again.",
-      });
-    }
+  const removeImage = (index: number) => {
+    const newImages = [...images];
+    newImages.splice(index, 1);
+    form.setValue("images", newImages);
   };
 
   return (
@@ -150,7 +115,10 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
             render={({
               field,
             }: {
-              field: ControllerRenderProps<FormValues, "name">;
+              field: ControllerRenderProps<
+                z.infer<typeof insertProductSchema>,
+                "name"
+              >;
             }) => (
               <FormItem className="w-full">
                 <FormLabel>Name</FormLabel>
@@ -168,7 +136,10 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
             render={({
               field,
             }: {
-              field: ControllerRenderProps<FormValues, "slug">;
+              field: ControllerRenderProps<
+                z.infer<typeof insertProductSchema>,
+                "slug"
+              >;
             }) => (
               <FormItem className="w-full">
                 <FormLabel>Slug</FormLabel>
@@ -177,8 +148,7 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
                     <Input placeholder="Enter slug" {...field} />
                     <Button
                       type="button"
-                      variant="outline"
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 mt-2"
                       onClick={() => {
                         form.setValue(
                           "slug",
@@ -203,7 +173,10 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
             render={({
               field,
             }: {
-              field: ControllerRenderProps<FormValues, "category">;
+              field: ControllerRenderProps<
+                z.infer<typeof insertProductSchema>,
+                "category"
+              >;
             }) => (
               <FormItem className="w-full">
                 <FormLabel>Category</FormLabel>
@@ -221,7 +194,10 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
             render={({
               field,
             }: {
-              field: ControllerRenderProps<FormValues, "brand">;
+              field: ControllerRenderProps<
+                z.infer<typeof insertProductSchema>,
+                "brand"
+              >;
             }) => (
               <FormItem className="w-full">
                 <FormLabel>Brand</FormLabel>
@@ -241,7 +217,10 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
             render={({
               field,
             }: {
-              field: ControllerRenderProps<FormValues, "price">;
+              field: ControllerRenderProps<
+                z.infer<typeof insertProductSchema>,
+                "price"
+              >;
             }) => (
               <FormItem className="w-full">
                 <FormLabel>Price</FormLabel>
@@ -259,7 +238,10 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
             render={({
               field,
             }: {
-              field: ControllerRenderProps<FormValues, "stock">;
+              field: ControllerRenderProps<
+                z.infer<typeof insertProductSchema>,
+                "stock"
+              >;
             }) => (
               <FormItem className="w-full">
                 <FormLabel>Stock</FormLabel>
@@ -271,7 +253,7 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
             )}
           />
         </div>
-        <div className="upload-field flex flex-col md:flex-row gap-5">
+        <div className="upload-field">
           {/* Images */}
           <FormField
             control={form.control}
@@ -293,7 +275,7 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
                             height={100}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = "/placeholder.png"; // You can add a placeholder image
+                              target.src = "/placeholder.png";
                             }}
                           />
                           <button
@@ -307,65 +289,34 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
                       ))}
                     </div>
 
-                    {/* File Selection and Upload */}
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap gap-2">
-                        {files.map((file, index) => (
-                          <div key={index} className="relative">
-                            <div className="w-20 h-20 bg-gray-100 rounded-sm flex items-center justify-center">
-                              <span className="text-xs text-gray-500">
-                                {file.name}
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeFile(index)}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={(e) => {
-                            if (e.target.files) {
-                              onDrop(Array.from(e.target.files));
-                              e.target.value = "";
-                            }
-                          }}
-                          className="hidden"
-                          ref={fileInputRef}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className={`relative ${
-                            isUploading ? "opacity-50 cursor-not-allowed" : ""
-                          }`}
-                          disabled={isUploading}
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <Upload className="mr-2 h-4 w-4" />
-                          Choose Files
-                        </Button>
-                        {files.length > 0 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => startUpload(files)}
-                            disabled={isUploading}
-                          >
-                            <CloudUpload className="mr-2 h-4 w-4" />
-                            {isUploading ? "Uploading..." : "Upload Files"}
-                          </Button>
-                        )}
-                      </div>
+                    {/* Upload Button */}
+                    <div className="flex flex-col gap-2">
+                      <UploadButton
+                        endpoint="imageUploader"
+                        onUploadBegin={() => setIsUploading(true)}
+                        onClientUploadComplete={(res: { url: string }[]) => {
+                          setIsUploading(false);
+                          if (res) {
+                            const newImageUrls = res.map((file) => file.url);
+                            form.setValue("images", [
+                              ...images,
+                              ...newImageUrls,
+                            ]);
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          setIsUploading(false);
+                          toast({
+                            variant: "destructive",
+                            description: `ERROR! ${error.message}`,
+                          });
+                        }}
+                      />
+                      {isUploading && (
+                        <p className="text-sm text-muted-foreground">
+                          Uploading files...
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -405,7 +356,7 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
               )}
 
               {isFeatured && !banner && (
-                <UploadThingButton
+                <UploadButton
                   endpoint="imageUploader"
                   onClientUploadComplete={(res: { url: string }[]) => {
                     form.setValue("banner", res[0].url);
@@ -429,7 +380,10 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
             render={({
               field,
             }: {
-              field: ControllerRenderProps<FormValues, "description">;
+              field: ControllerRenderProps<
+                z.infer<typeof insertProductSchema>,
+                "description"
+              >;
             }) => (
               <FormItem className="w-full">
                 <FormLabel>Description</FormLabel>
@@ -460,4 +414,4 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
   );
 };
 
-export default ProductForm;
+export default ProductForm1;
