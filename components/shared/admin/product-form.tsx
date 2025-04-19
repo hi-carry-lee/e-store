@@ -28,7 +28,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react"; // 更新：导入 useEffect
 import { Upload, CloudUpload } from "lucide-react";
 
 interface ProductFormProps {
@@ -42,6 +42,7 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [previewImages, setPreviewImages] = useState<string[]>([]); // 更新：新增状态来存储缩略图 URL
 
   const schema = type === "Update" ? updateProductSchema : insertProductSchema;
   type FormValues = z.infer<typeof schema>;
@@ -62,6 +63,7 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
         const newImageUrls = res.map((file: { url: string }) => file.url);
         form.setValue("images", [...images, ...newImageUrls]);
         setFiles([]);
+        setPreviewImages([]); // 更新：清空缩略图状态
       }
     },
     onUploadError: (error: Error) => {
@@ -73,11 +75,17 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
   });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    // 更新：生成缩略图 URL
+    const newPreviewImages = acceptedFiles.map(
+      (file) => URL.createObjectURL(file) // 创建文件的 URL
+    );
     setFiles((prev) => [...prev, ...acceptedFiles]);
+    setPreviewImages((prev) => [...prev, ...newPreviewImages]); // 更新：保存缩略图 URLs
   }, []);
 
   const removeFile = useCallback((index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index)); // 更新：同步删除缩略图
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -134,6 +142,14 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
       });
     }
   };
+
+  // 更新：在组件卸载时释放生成的 URL
+  useEffect(() => {
+    // 在组件卸载时释放所有生成的 URL
+    return () => {
+      previewImages.forEach((imageUrl) => URL.revokeObjectURL(imageUrl)); // 释放内存
+    };
+  }, [previewImages]);
 
   return (
     <Form {...form}>
@@ -271,7 +287,22 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
             )}
           />
         </div>
-        <div className="upload-field flex flex-col md:flex-row gap-5">
+        <div
+          className="upload-field flex flex-col md:flex-row gap-5"
+          // onDragOver 和 onDrop 是 Web API 中 HTML5 的拖放 (Drag and Drop) API 的一部分
+          onDragOver={(e) => {
+            e.preventDefault(); // 阻止默认行为，以便可以放置
+            e.stopPropagation(); // 防止事件传播
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // 获取拖放的文件
+            const acceptedFiles = Array.from(e.dataTransfer.files);
+            onDrop(acceptedFiles); // 调用你之前定义的 onDrop
+          }}
+        >
           {/* Images */}
           <FormField
             control={form.control}
@@ -312,10 +343,15 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
                       <div className="flex flex-wrap gap-2">
                         {files.map((file, index) => (
                           <div key={index} className="relative">
-                            <div className="w-20 h-20 bg-gray-100 rounded-sm flex items-center justify-center">
-                              <span className="text-xs text-gray-500">
-                                {file.name}
-                              </span>
+                            {/* 显示缩略图 */}
+                            <div className="w-20 h-20 relative">
+                              <Image
+                                src={previewImages[index]} // 更新：使用缩略图 URL
+                                alt="Preview"
+                                className="object-cover object-center rounded-sm"
+                                width={100}
+                                height={100}
+                              />
                             </div>
                             <button
                               type="button"
@@ -335,7 +371,7 @@ const ProductForm = ({ type, product, productId }: ProductFormProps) => {
                           accept="image/*"
                           onChange={(e) => {
                             if (e.target.files) {
-                              onDrop(Array.from(e.target.files));
+                              onDrop(Array.from(e.target.files)); // 更新：将选中的文件传入 onDrop
                               e.target.value = "";
                             }
                           }}
