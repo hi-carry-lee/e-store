@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Menu from "@/components/shared/header/menu";
 import MainNav from "./main-nav";
-import { Input } from "@/components/ui/input";
+import AdminSearch from "@/components/admin/admin-search";
 
 export default function UserLayout({
   children,
@@ -24,14 +24,8 @@ export default function UserLayout({
           </Link>
           {/* Nav for user orders and user profile */}
           <MainNav className="mx-6" />
-          <div className="mx-auto flex items-center space-x-4">
-            <Input
-              type="text"
-              placeholder="Search..."
-              className="md:w-[100px] lg:w-[300px]"
-            />
-          </div>
           <div className="ml-auto flex items-center space-x-4">
+            <AdminSearch />
             <Menu />
           </div>
         </div>
