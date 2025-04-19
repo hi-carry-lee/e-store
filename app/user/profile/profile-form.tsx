@@ -12,8 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { updateUserProfile } from "@/lib/actions/user.actions";
 import { updateProfileSchema } from "@/lib/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useSession } from "next-auth/react";
 
 // * why don't pass user id? since we will check user session in server action, then we can get user id
 const ProfileForm = ({
@@ -27,6 +29,8 @@ const ProfileForm = ({
   });
 
   const { toast } = useToast();
+  const router = useRouter();
+  const { update: updateSession } = useSession();
 
   const onSubmit = async (values: z.infer<typeof updateProfileSchema>) => {
     const res = await updateUserProfile(values);
@@ -38,9 +42,19 @@ const ProfileForm = ({
       });
     }
 
+    // Update the session with the new name
+    await updateSession({
+      user: {
+        name: values.name,
+      },
+    });
+
     toast({
       description: res.message,
     });
+
+    // Refresh the server components to get the latest data
+    router.refresh();
   };
 
   return (

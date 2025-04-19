@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { auth } from "@/auth";
 import ProfileForm from "./profile-form";
 import { redirect } from "next/navigation";
+import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   title: "Customer Profile",
@@ -19,12 +20,14 @@ const Profile = async () => {
   return (
     <div className="max-w-md mx-auto space-y-4">
       <h2 className="h2-bold">Profile</h2>
-      <ProfileForm
-        initialData={{
-          name: session?.user?.name || "",
-          email: session?.user?.email || "",
-        }}
-      />
+      <SessionProvider session={session}>
+        <ProfileForm
+          initialData={{
+            name: session?.user?.name || "",
+            email: session?.user?.email || "",
+          }}
+        />
+      </SessionProvider>
     </div>
   );
 };
