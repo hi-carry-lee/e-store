@@ -34,6 +34,8 @@
     "bufferutil": "^4.0.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.483.0",
     "next": "15.2.3",
     "next-auth": "^5.0.0-beta.25",

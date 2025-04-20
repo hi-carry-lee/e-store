@@ -215,3 +215,21 @@ export async function getAllCategories() {
 
 //   return categoriesWithCount;
 // }
+
+export async function getFeaturedProducts() {
+  const data = await prisma.product.findMany({
+    // TODO：后期数据量大了，需要为isFeatured, createdAt创建复合索引
+    where: { isFeatured: true },
+    orderBy: { createdAt: "desc" },
+    take: 4,
+    // 只选择轮播图需要的字段
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      banner: true,
+    },
+  });
+
+  return convertToPlainObject(data);
+}
