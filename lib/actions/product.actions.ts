@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "../auth-guard";
 import { insertProductSchema, updateProductSchema } from "../validators";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 // get latest products
 export async function getLatestProducts() {
@@ -31,38 +32,81 @@ export async function getAllProducts({
   limit = PAGE_SIZE,
   page,
   category,
+  price,
+  rating,
+  sort,
 }: {
   query: string;
+  category: string;
   limit?: number;
   page: number;
-  category?: string;
+  price?: string;
+  rating?: string;
+  sort?: string;
 }) {
-  // 构建动态查询条件
-  const whereClause = {
-    ...(query && {
-      // name是product表的field:name
-      name: {
-        contains: query, // LIKE '%value%', 默认区分大小写
-        // "insensitive" 作为 Prisma 的查询参数值，需要是特定的字面量值，而不是任意字符串
-        // 字面量类型指的是类型系统中明确指定的值，而不是动态计算的值
-        mode: "insensitive" as const, //设置查询不区分大小写
-      },
-    }),
-    ...(category && {
-      category: {
-        equals: category,
-      },
-    }),
-  };
+  // Query filter
+  const queryFilter: Prisma.ProductWhereInput =
+    query && query !== "all"
+      ? {
+          name: {
+            contains: query, // LIKE '%value%', 默认区分大小写
+            mode: "insensitive" as const,
+            // "insensitive" 作为 Prisma 的查询参数值，需要是特定的字面量值，而不是任意字符串
+            // 字面量类型指的是类型系统中明确指定的值，而不是动态计算的值
+          },
+        }
+      : {};
+
+  // Category filter
+  const categoryFilter = category && category !== "all" ? { category } : {};
+
+  // Price filter
+  const priceFilter: Prisma.ProductWhereInput =
+    price && price !== "all"
+      ? {
+          price: {
+            gte: Number(price.split("-")[0]),
+            lte: Number(price.split("-")[1]),
+          },
+        }
+      : {};
+
+  // Rating filter
+  const ratingFilter =
+    rating && rating !== "all"
+      ? {
+          rating: {
+            gte: Number(rating),
+          },
+        }
+      : {};
 
   const data = await prisma.product.findMany({
-    where: whereClause,
+    where: {
+      ...queryFilter,
+      ...categoryFilter,
+      ...priceFilter,
+      ...ratingFilter,
+    },
+    orderBy:
+      sort === "lowest"
+        ? { price: "asc" }
+        : sort === "highest"
+        ? { price: "desc" }
+        : sort === "rating"
+        ? { rating: "desc" }
+        : { createdAt: "desc" },
     skip: (page - 1) * limit,
     take: limit,
   });
 
   const dataCount = await prisma.product.count({
-    where: whereClause,
+    where: {
+      ...queryFilter,
+      ...categoryFilter,
+      ...priceFilter,
+      ...ratingFilter,
+    },
   });
 
   return {
