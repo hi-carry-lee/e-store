@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/db/prisma";
+import { basePrisma, prisma } from "@/db/prisma";
 import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "@/lib/constants/index";
 import { convertToPlainObject, formatError } from "../utils";
 import { revalidatePath } from "next/cache";
@@ -145,3 +145,73 @@ export async function getProductById(productId: string) {
 
   return convertToPlainObject(data);
 }
+
+/*
+export async function getAllCategories1() {
+  const data = await prisma.product.groupBy({
+    by: ["category"],
+    _count: true,
+  });
+
+  return data;
+}
+
+上面这个函数存在TS类型问题：
+This expression is not callable.
+  Each member of the union type '(<A extends ProductGroupByArgs<InternalArgs & { result: { product: { price: () => { compute(product: { price: Decimal; rating: Decimal; id: string; createdAt: Date; name: string; slug: string; ... 7 more ...; banner: string | null; }): string; }; rating: () => { ...; }; }; cart: { ...; }; order: { ...; }; orderItem:...' has signatures, but none of those signatures are compatible with each other.ts(2349)
+原因：
+  1. $extends 方法对 Prisma 客户端进行扩展可能导致基础数据类型（例如 Decimal）被更改为 string，这与 groupBy 方法的预期类型定义不兼容
+  2. 使用 $extends 方法扩展 Prisma 客户端时，实际上修改了整个 product 模型的类型定义；
+  3. 即使 groupBy 方法处理的主要是 category 字段，Prisma 在解析模型时仍然需要了解整个模型的结构。这包括 Product 模型的所有字段，包括在$extends 中定义的 price 和 rating
+
+解决方案：
+  1. 使用原始 Prisma 客户端执行 groupBy 查询
+
+改造后的 getAllCategories1 函数
+export async function getAllCategories() {
+  使用原始 Prisma 客户端执行 groupBy 查询
+  const data = await basePrisma.product.groupBy({
+    by: ["category"],
+    _count: true,
+    // 和上面的方法作用相同
+    // _count: {
+    //   _all: true,
+    // },
+  });
+  return data;
+}
+*/
+
+export async function getAllCategories() {
+  // 使用原始 Prisma 客户端执行 groupBy 查询
+  const data = await basePrisma.product.groupBy({
+    by: ["category"],
+    _count: true,
+    // 和上面的方法作用相同
+    // _count: {
+    //   _all: true,
+    // },
+  });
+  return data;
+}
+
+// 这是一个折中方法，不过存在效率问题，不建议使用
+// export async function getAllCategories() {
+//   const categories = await prisma.product.findMany({
+//     select: {
+//       category: true,
+//     },
+//     distinct: ["category"],
+//   });
+
+//   const categoriesWithCount = await Promise.all(
+//     categories.map(async ({ category }) => {
+//       const count = await prisma.product.count({
+//         where: { category },
+//       });
+//       return { category, count };
+//     })
+//   );
+
+//   return categoriesWithCount;
+// }

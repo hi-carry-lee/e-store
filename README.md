@@ -1,3 +1,10 @@
+# features
+
+## upload
+
+- you can select or drag and drop multiple files and upload them at the same time
+- you can see the thumbnail of the uploaded file
+
 # todo
 
 ## upload

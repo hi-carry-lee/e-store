@@ -111,3 +111,19 @@ export const prisma = globalForPrisma.prisma || createPrismaClient();
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma as PrismaClient;
 }
+
+// 创建一个原始的 Prisma 客户端实例
+export const basePrisma = new PrismaClient();
+
+// 在开发环境中将实例保存到全局变量
+if (process.env.NODE_ENV !== "production") {
+  (global as unknown as { basePrisma: PrismaClient }).basePrisma = basePrisma;
+}
+
+// 清理 Prisma 客户端的连接
+async function cleanupPrisma() {
+  await basePrisma.$disconnect();
+}
+
+// 可以根据需要增加其他逻辑，例如在应用程序退出时进行清理
+process.on("exit", cleanupPrisma);
