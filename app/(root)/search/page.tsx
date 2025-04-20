@@ -6,11 +6,14 @@ import {
 } from "@/lib/actions/product.actions";
 import Link from "next/link";
 import { Product } from "@/types";
+// 抽离常量：避免重复创建，也有利于维护 👍
 import { PRICE_RANGES, RATINGS, SORT_ORDERS } from "@/lib/constants";
 import { Suspense } from "react";
 import PaginationPlus from "@/components/shared/pagination-plus";
+import { Spinner } from "@/components/shared/spinner";
 
 // 使用服务端组件优化性能和 SEO
+// 通过为各个子功能创建独立的组件，可以更好地组织代码，提高可读性和可维护性
 export async function generateMetadata({
   searchParams,
 }: {
@@ -48,7 +51,11 @@ export async function generateMetadata({
   };
 }
 
-// 抽离 URL 构建逻辑到单独函数
+// 抽离 URL 构建逻辑到单独函数，作用如下：
+// 合并参数：函数接收当前参数和新的参数更新，并将它们合并成一个新的对象。
+// 清理参数：过滤掉无效的参数，确保 URL 中只包含有效的搜索条件。
+// 构建 URL：使用 URLSearchParams 对象创建一个查询字符串，并返回完整的 URL，以便用户可以查看过滤后的搜索结果。
+// Partial解释：TypeScript 提供的一个内置类型，用于将某个对象类型的所有属性都变为可选的，比如Partial<T> 返回一个类型，其所有属性都是 T 的属性，但这些属性都是可选的；
 function buildFilterUrl(
   currentParams: SearchParams,
   updates: Partial<SearchParams>
@@ -61,12 +68,13 @@ function buildFilterUrl(
 
   // 只保留有值的参数，并确保所有值都是字符串
   Object.keys(newParams).forEach((key) => {
+    // 使用类型钥匙确保类型安全
     const value = newParams[key as keyof SearchParams];
     if (value !== undefined && value !== null) {
-      cleanParams[key] = String(value);
+      cleanParams[key] = String(value); // 转换为字符串以便于生成 URL
     }
   });
-
+  // 使用 URLSearchParams 生成查询字符串并返回完整的 URL
   return `/search?${new URLSearchParams(cleanParams).toString()}`;
 }
 
@@ -128,7 +136,11 @@ function ProductListFallback() {
           <div
             key={i}
             className="h-64 rounded-md bg-gray-200 animate-pulse"
-          ></div>
+            // TODO:使用Spinner组件，作用不是很大
+          >
+            <Spinner size="sm" className="border-gray-400" />
+            <span className="sr-only">Loading...</span>
+          </div>
         ))}
       </div>
     </div>
@@ -161,7 +173,11 @@ function CategorySidebarFallback() {
             <div
               key={i}
               className="w-32 h-4 bg-gray-200 rounded animate-pulse"
-            ></div>
+              // TODO:使用Spinner组件，作用不是很大
+            >
+              <Spinner size="sm" className="border-gray-400" />
+              <span className="sr-only">Loading...</span>
+            </div>
           ))}
         </div>
       </div>
@@ -282,6 +298,9 @@ function FilterSection({
 // 搜索结果头部
 // 用来展示当前的筛选条件，以及清除筛选按钮
 function SearchHeader({ currentParams }: { currentParams: SearchParams }) {
+  // keyof 是 TypeScript 的一个关键字，用于提取某个类型的所有键，并返回一个字符串字面量联合类型，表示该类型能够被访问的所有属性名，目的是：确保类型安全，防止被其他开发者修改或扩展，以及增强可维护性，如果 SearchParams 接口的结构发生变化或增加了新属性，那么会在这里自动提示需要更新
+  // activeFilters 等同于："q" | "category" | "price" | "rating" | "sort" | "page"
+  // key as keyof SearchParams 是一个类型断言，表示 key 变量一定是 SearchParams 接口中的某一个键
   const activeFilters = [
     { key: "q" as keyof SearchParams, label: "Query" },
     { key: "category" as keyof SearchParams, label: "Category" },
