@@ -6,6 +6,9 @@ import ProductPrice from "@/components/shared/product/product-price";
 import ProductImages from "@/components/shared/product/product-images";
 import AddToCart from "@/components/shared/cart/add-to-cart";
 import { getMyCart } from "@/lib/actions/cart.actions";
+import ReviewList from "./review-list";
+import Rating from "@/components/shared/product/rating";
+import { auth } from "@/auth";
 
 const ProductDetailsPage = async (props: {
   params: Promise<{ slug: string }>;
@@ -16,84 +19,96 @@ const ProductDetailsPage = async (props: {
     return notFound();
   }
 
+  const session = await auth();
+  const userId = session?.user?.id;
+
   const cart = await getMyCart();
 
   return (
-    <section>
-      <div className="grid grid-cols-1 md:grid-cols-5">
-        {/* image column */}
-        <div className="col-span-2">
-          {/* Image component */}
-          <ProductImages images={product.images} />
-        </div>
+    <>
+      <section>
+        <div className="grid grid-cols-1 md:grid-cols-5">
+          {/* image column */}
+          <div className="col-span-2">
+            {/* Image component */}
+            <ProductImages images={product.images} />
+          </div>
 
-        {/* detaile column */}
-        <div className="col-span-2 p-5">
-          <div className="flex flex-col gap-6">
-            <p>
-              {product.brand} {product.category}
-            </p>
-            <h2 className="h3-bold">{product.name}</h2>
-            <p>
-              {product.rating as string} of {product.numReviews} reviews
-            </p>
-            {/* it seems this div is not necessary❓❓ */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <ProductPrice
-                value={Number(product.price)}
-                // w-24 is a important class, it shrink the ProductPrice🚩
-                className="rounded-full bg-green-100 text-green-800 text-center px-5 py-2 w-24"
-              />
+          {/* detaile column */}
+          <div className="col-span-2 p-5">
+            <div className="flex flex-col gap-6">
+              <p>
+                {product.brand} {product.category}
+              </p>
+              <h2 className="h3-bold">{product.name}</h2>
+              <Rating value={Number(product.rating)} />
+              <p>{product.numReviews} reviews</p>
+              {/* it seems this div is not necessary❓❓ */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <ProductPrice
+                  value={Number(product.price)}
+                  // w-24 is a important class, it shrink the ProductPrice🚩
+                  className="rounded-full bg-green-100 text-green-800 text-center px-5 py-2 w-24"
+                />
+              </div>
+            </div>
+            <div className="mt-10">
+              <p className="font-semibold">Description</p>
+              <p>{product.description}</p>
             </div>
           </div>
-          <div className="mt-10">
-            <p className="font-semibold">Description</p>
-            <p>{product.description}</p>
+
+          {/* action column */}
+          <div>
+            <Card>
+              <CardContent className="p-4">
+                <div className="mb-2 flex justify-between">
+                  <div>Price</div>
+                  <div>
+                    <ProductPrice value={Number(product.price)} />
+                  </div>
+                </div>
+                <div className="mb-2 flex justify-between">
+                  <div>Status</div>
+                  <div>
+                    {product.stock > 0 ? (
+                      <Badge variant="outline">In Stock</Badge>
+                    ) : (
+                      <Badge variant="destructive">Out Of Stock</Badge>
+                    )}
+                  </div>
+                </div>
+                {product.stock > 0 && (
+                  // flex-center is a customized class name
+                  // but it seems that the div is not required❓❓
+                  // <div className="flex-center">
+                  <AddToCart
+                    cart={cart}
+                    item={{
+                      price: Number(product.price),
+                      name: product.name,
+                      slug: product.slug,
+                      image: product.images[0],
+                      productId: product.id,
+                      qty: 1,
+                    }}
+                  />
+                  // </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
-
-        {/* action column */}
-        <div>
-          <Card>
-            <CardContent className="p-4">
-              <div className="mb-2 flex justify-between">
-                <div>Price</div>
-                <div>
-                  <ProductPrice value={Number(product.price)} />
-                </div>
-              </div>
-              <div className="mb-2 flex justify-between">
-                <div>Status</div>
-                <div>
-                  {product.stock > 0 ? (
-                    <Badge variant="outline">In Stock</Badge>
-                  ) : (
-                    <Badge variant="destructive">Out Of Stock</Badge>
-                  )}
-                </div>
-              </div>
-              {product.stock > 0 && (
-                // flex-center is a customized class name
-                // but it seems that the div is not required❓❓
-                // <div className="flex-center">
-                <AddToCart
-                  cart={cart}
-                  item={{
-                    price: Number(product.price),
-                    name: product.name,
-                    slug: product.slug,
-                    image: product.images[0],
-                    productId: product.id,
-                    qty: 1,
-                  }}
-                />
-                // </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </section>
+      </section>
+      <section className="mt-10">
+        <h2 className="h2-bold  mb-5">Customer Reviews</h2>
+        <ReviewList
+          productId={product.id}
+          productSlug={product.slug}
+          userId={userId || ""}
+        />
+      </section>
+    </>
   );
 };
 

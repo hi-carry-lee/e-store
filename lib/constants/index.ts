@@ -75,3 +75,9 @@ export const PRICE_RANGES = [
   },
 ];
 export const RATINGS = [4, 3, 2, 1];
+
+export const reviewFormDefaultValues = {
+  title: "",
+  comment: "",
+  rating: 0,
+};

@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   insertOrderItemSchema,
   insertOrderSchema,
+  insertReviewSchema,
   paymentResultSchema,
   shippingAddressSchema,
   updateProfileSchema,
@@ -38,3 +39,9 @@ export type Order = z.infer<typeof insertOrderSchema> & {
 export type PaymentResult = z.infer<typeof paymentResultSchema>;
 
 export type UserProfile = z.infer<typeof updateProfileSchema>;
+
+export type Review = z.infer<typeof insertReviewSchema> & {
+  id: string;
+  createdAt: Date;
+  user?: { name: string };
+};
