@@ -10,7 +10,6 @@ import { Product } from "@/types";
 import { PRICE_RANGES, RATINGS, SORT_ORDERS } from "@/lib/constants";
 import { Suspense } from "react";
 import PaginationPlus from "@/components/shared/pagination-plus";
-import { Spinner } from "@/components/shared/spinner";
 
 // 使用服务端组件优化性能和 SEO
 // 通过为各个子功能创建独立的组件，可以更好地组织代码，提高可读性和可维护性
@@ -135,12 +134,9 @@ function ProductListFallback() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
+            // animate-pulse 是 Tailwind CSS 提供的一个内置动画类，它会使元素的透明度在一定范围内周期性地变化，模拟出一个“脉动”的效果
             className="h-64 rounded-md bg-gray-200 animate-pulse"
-            // TODO:使用Spinner组件，作用不是很大
-          >
-            <Spinner size="sm" className="border-gray-400" />
-            <span className="sr-only">Loading...</span>
-          </div>
+          ></div>
         ))}
       </div>
     </div>
@@ -173,11 +169,7 @@ function CategorySidebarFallback() {
             <div
               key={i}
               className="w-32 h-4 bg-gray-200 rounded animate-pulse"
-              // TODO:使用Spinner组件，作用不是很大
-            >
-              <Spinner size="sm" className="border-gray-400" />
-              <span className="sr-only">Loading...</span>
-            </div>
+            ></div>
           ))}
         </div>
       </div>

@@ -59,6 +59,7 @@ const ProductDetailsPage = async (props: {
           </div>
 
           {/* action column */}
+          {/* 为什么这里不需要col-span-1? 因为css grid的自动分配机制: 当没有为某个子元素指定 grid-column 或 grid-row 的数量时，它会默认占据剩余的空间 */}
           <div>
             <Card>
               <CardContent className="p-4">
@@ -68,20 +69,21 @@ const ProductDetailsPage = async (props: {
                     <ProductPrice value={Number(product.price)} />
                   </div>
                 </div>
-                <div className="mb-2 flex justify-between">
+                <div className="mb-2 flex justify-between items-center min-w-0">
                   <div>Status</div>
-                  <div>
+                  <div className="flex-grow flex justify-end">
                     {product.stock > 0 ? (
-                      <Badge variant="outline">In Stock</Badge>
+                      <Badge className="px-2 py-1" variant="outline">
+                        In Stock
+                      </Badge>
                     ) : (
-                      <Badge variant="destructive">Out Of Stock</Badge>
+                      <Badge className="px-2 py-1" variant="destructive">
+                        Out Of Stock
+                      </Badge>
                     )}
                   </div>
                 </div>
                 {product.stock > 0 && (
-                  // flex-center is a customized class name
-                  // but it seems that the div is not required❓❓
-                  // <div className="flex-center">
                   <AddToCart
                     cart={cart}
                     item={{
@@ -93,7 +95,6 @@ const ProductDetailsPage = async (props: {
                       qty: 1,
                     }}
                   />
-                  // </div>
                 )}
               </CardContent>
             </Card>

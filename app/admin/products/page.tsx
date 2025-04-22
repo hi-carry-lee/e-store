@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import PaginationPlus from "@/components/shared/pagination-plus";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,6 +68,7 @@ const AdminProductsPage = async (props: {
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>NAME</TableHead>
+              <TableHead>Thumbnail</TableHead>
               <TableHead className="text-right">PRICE</TableHead>
               <TableHead>CATEGORY</TableHead>
               <TableHead>STOCK</TableHead>
@@ -79,6 +81,14 @@ const AdminProductsPage = async (props: {
               <TableRow key={product.id}>
                 <TableCell>{formatId(product.id)}</TableCell>
                 <TableCell>{product.name}</TableCell>
+                <TableCell>
+                  <Image
+                    src={product.images[0]}
+                    alt={product.name}
+                    width={50}
+                    height={50}
+                  />
+                </TableCell>
                 <TableCell className="text-right">
                   {formatCurrency(product.price)}
                 </TableCell>
