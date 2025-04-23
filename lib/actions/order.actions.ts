@@ -6,12 +6,13 @@ import { auth } from "@/auth";
 import { getMyCart } from "./cart.actions";
 import { getUserById } from "./user.actions";
 import { insertOrderSchema } from "../validators";
-import { CartItem, PaymentResult } from "@/types/index";
+import { CartItem, PaymentResult, ShippingAddress } from "@/types/index";
 import { prisma } from "@/db/prisma";
 import { Prisma } from "@prisma/client";
 import { paypal } from "@/lib/paypal";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE } from "../constants";
+import { sendPurchaseReceipt } from "@/email";
 
 // Create order and create order items
 export async function createOrder() {
@@ -257,6 +258,27 @@ export async function updateOrderToPaid({
   if (!updatedOrder) {
     throw new Error("Order not found");
   }
+
+  // Send the purchase receipt email with the updated order
+  sendPurchaseReceipt({
+    order: {
+      ...updatedOrder,
+      itemsPrice: updatedOrder.itemsPrice.toString(),
+      shippingPrice: updatedOrder.shippingPrice.toString(),
+      taxPrice: updatedOrder.taxPrice.toString(),
+      totalPrice: updatedOrder.totalPrice.toString(),
+      orderItems: updatedOrder.orderItems.map((item) => ({
+        ...item,
+        price: item.price.toString(),
+      })),
+      shippingAddress: updatedOrder.shippingAddress as ShippingAddress,
+      paymentResult: updatedOrder.paymentResult as PaymentResult,
+    },
+  });
+  // 为什么手动将金额类型转换为字符串？而且在Prisma的客户端扩展中已经将金额类型转换为字符串了？
+  // 1. Prisma 扩展中的 $extends 确实会在运行时将 Decimal 值转换为字符串，但这只影响运行时的值，不会改变 TypeScript 的静态类型定义
+  // 2. 当您使用 prisma.$extends 时，TypeScript 并不会自动更新其返回类型，类型系统仍然认为这些字段是 Decimal 类型，即使运行时它们会被转换为字符串
+  // 3. 即使数据在运行时被转换为字符串，TypeScript 编译器在编译时仍然使用原始的 Prisma 生成的类型
 }
 
 export async function getMyOrders({
