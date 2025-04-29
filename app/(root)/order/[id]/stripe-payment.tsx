@@ -27,6 +27,10 @@ const StripePayment = ({
 
   const { theme, systemTheme } = useTheme();
 
+  // 在组件内定义组件的好处：
+  // 作用域封装：StripeForm直接访问StripePayment的props，减少外部依赖和参数传递，保持组件紧密的逻辑关联
+  // 状态管理：可以直接使用父组件的上下文，减少props传递复杂度
+  // 缺点：可读性降低，不利于组件复用，增加组件复杂度
   // Stripe Form Component
   const StripeForm = () => {
     const stripe = useStripe();
@@ -95,10 +99,10 @@ const StripePayment = ({
             theme === "dark"
               ? "night"
               : theme === "light"
-              ? "stripe"
-              : systemTheme === "light"
-              ? "stripe"
-              : "night",
+                ? "stripe"
+                : systemTheme === "light"
+                  ? "stripe"
+                  : "night",
         },
       }}
       stripe={stripePromise}

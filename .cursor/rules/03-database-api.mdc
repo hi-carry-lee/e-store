@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Database and API Structure
+
+## Database Setup
+The application uses Prisma ORM with a relational database:
+- [prisma/schema.prisma](mdc:prisma/schema.prisma) - Database schema definition
+- [db/index.ts](mdc:db/index.ts) - Database client and utilities
+
+## API Routes
+API routes are organized under `app/api` following REST principles:
+- `/api/auth/*` - Authentication endpoints
+- `/api/products/*` - Product management
+- `/api/orders/*` - Order processing
+- `/api/users/*` - User management
+
+## Data Access
+- Database operations are abstracted through Prisma Client
+- API routes use server actions for mutations
+- Data fetching uses Next.js server components
+- Real-time updates handled through webhooks
+
+## Error Handling
+- API routes follow consistent error response format
+- Database errors are properly caught and handled
+- Validation is performed using Zod schemas
+- Error boundaries catch and display UI errors
+

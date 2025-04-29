@@ -46,6 +46,25 @@ export const productDefaultValues = {
   banner: null,
 };
 
+export const ADMIN_NAV_LINKS = [
+  {
+    title: "Overview",
+    href: "/admin/overview",
+  },
+  {
+    title: "Products",
+    href: "/admin/products",
+  },
+  {
+    title: "Orders",
+    href: "/admin/orders",
+  },
+  {
+    title: "Users",
+    href: "/admin/users",
+  },
+];
+
 export const USER_ROLES = process.env.USER_ROLES
   ? process.env.USER_ROLES.split(", ")
   : ["admin", "user"];

@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Components and Styling Guide
+
+## Component Architecture
+- Components are organized by feature and reusability
+- Shared UI components live in `/components`
+- Page-specific components are co-located with their pages
+- Components follow atomic design principles
+
+## Styling Approach
+The project uses a modern styling stack:
+- [tailwind.config.ts](mdc:tailwind.config.ts) - Tailwind configuration
+- [components.json](mdc:components.json) - Shadcn UI configuration
+- Global styles in `app/globals.css`
+
+## Component Guidelines
+1. Components should be modular and reusable
+2. Props should be properly typed with TypeScript
+3. Use composition over inheritance
+4. Follow accessibility best practices
+
+## UI Libraries and Tools
+- Tailwind CSS for utility-first styling
+- Shadcn UI for base components
+- Radix UI for accessible primitives
+- CSS Modules for component-specific styles
+

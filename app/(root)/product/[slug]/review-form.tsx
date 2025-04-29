@@ -63,7 +63,6 @@ const ReviewForm = ({
     form.setValue("userId", userId);
 
     const review = await getReviewByProductId({ productId });
-
     if (review) {
       form.setValue("title", review.title);
       form.setValue("description", review.description);
@@ -74,11 +73,11 @@ const ReviewForm = ({
   };
 
   // Submit Form Handler
+  // SubmitHandler is a function type provided by react-hook-form 🔴
   const onSubmit: SubmitHandler<z.infer<typeof insertReviewSchema>> = async (
     values
   ) => {
     const res = await createUpdateReview({ ...values, productId });
-
     if (!res.success) {
       return toast({
         variant: "destructive",
@@ -86,10 +85,8 @@ const ReviewForm = ({
       });
     }
 
-    setOpen(false);
-
-    onReviewSubmitted();
-
+    setOpen(false); // hide review form
+    onReviewSubmitted(); // reload reviews list from DB
     toast({
       description: res.message,
     });

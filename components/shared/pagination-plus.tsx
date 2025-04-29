@@ -95,7 +95,7 @@ const PaginationPlus = ({
   const isNextDisabled = currentPageNumber >= totalPages;
 
   return (
-    <Pagination>
+    <Pagination className="mt-2">
       <PaginationContent>
         {/* 上一页按钮 */}
         <PaginationItem>

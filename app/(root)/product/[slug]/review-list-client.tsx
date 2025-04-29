@@ -1,4 +1,10 @@
+"use client";
+
+import { useEffect } from "react";
+import { Review } from "@/types";
 import Link from "next/link";
+import { useState } from "react";
+import ReviewForm from "./review-form";
 import { getReviews } from "@/lib/actions/review.actions";
 import {
   Card,
@@ -10,15 +16,12 @@ import {
 import { Calendar, User } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import Rating from "@/components/shared/product/rating";
-import ReviewFormWrapper from "./review-form-wrapper";
 
 /*
-服务器组件方案：
-1. 直接在服务器端获取数据
-2. 使用客户端组件review-form-wrapper,包装器处理交互：
-  因为服务端组件不能向客户端组件传递回调函数，所以使用了一个中间层
+备份：这是纯客户端实现方案，不符合Nextjs的最佳实践，
+因为Nextjs的最佳实践是服务器组件，客户端组件只负责UI渲染，数据获取和处理应该在服务器组件中进行。
 */
-async function ReviewList({
+const ReviewList = ({
   userId,
   productId,
   productSlug,
@@ -26,17 +29,33 @@ async function ReviewList({
   userId: string;
   productId: string;
   productSlug: string;
-}) {
-  // 直接在服务器端获取数据
-  const res = await getReviews({ productId });
-  const reviews = res.data;
+}) => {
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  useEffect(() => {
+    const loadReviews = async () => {
+      const res = await getReviews({ productId });
+      setReviews(res.data);
+    };
+
+    loadReviews();
+  }, [productId]);
+
+  // Reload reviews after created or updated
+  const reload = async () => {
+    const res = await getReviews({ productId });
+    setReviews([...res.data]);
+  };
 
   return (
     <div className="space-y-4">
       {reviews.length === 0 && <div>No reviews yet</div>}
       {userId ? (
-        // 将原本在这里传递的回调函数，放在客户端包装器传递
-        <ReviewFormWrapper userId={userId} productId={productId} />
+        <ReviewForm
+          userId={userId}
+          productId={productId}
+          onReviewSubmitted={reload}
+        />
       ) : (
         <div>
           Please
@@ -76,6 +95,6 @@ async function ReviewList({
       </div>
     </div>
   );
-}
+};
 
 export default ReviewList;

@@ -34,14 +34,19 @@ const AdminOrdersPage = async (props: {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-3">
-        <h1 className="h2-bold">Orders</h1>
+        <h1 className="h2-bold py-2">Orders</h1>
         {searchText && (
-          <div>
-            Filtered by <i>&quot;{searchText}&quot;</i>{" "}
-            <Link href="/admin/orders">
-              <Button variant="outline" size="sm">
-                Remove Filter
-              </Button>
+          <div className="flex items-end gap-2">
+            <span>
+              {" "}
+              Filtered by <i>&quot;{searchText}&quot;</i>{" "}
+            </span>
+            <Link href="/admin/orders" className="flex items-end">
+              <div>
+                <Button variant="ghost" size="sm" className="flex items-end">
+                  Remove Filter
+                </Button>
+              </div>
             </Link>
           </div>
         )}

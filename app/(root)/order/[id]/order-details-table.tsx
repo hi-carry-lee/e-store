@@ -69,7 +69,7 @@ const OrderDetailsTable = ({
     return status;
   }
 
-  // Creates a PayPal order
+  // Creates a PayPal order by sending a request to the PayPal API
   const handleCreatePayPalOrder = async () => {
     const res = await createPaypalOrder(order.id);
     if (!res.success)
@@ -82,6 +82,8 @@ const OrderDetailsTable = ({
 
   // Approves a PayPal order
   const handleApprovePayPalOrder = async (data: { orderID: string }) => {
+    // order.id is the order of our app 1️⃣
+    // data.orderID is the order of PayPal 2️⃣
     const res = await approvePayPalOrder(order.id, data);
     toast({
       description: res.message,
@@ -240,6 +242,7 @@ const OrderDetailsTable = ({
                 <div>
                   <PayPalScriptProvider options={{ clientId: paypalClientId }}>
                     <PrintLoadingState />
+                    {/* all the PayPal UI is created by this component */}
                     <PayPalButtons
                       createOrder={handleCreatePayPalOrder}
                       onApprove={handleApprovePayPalOrder}
@@ -249,6 +252,7 @@ const OrderDetailsTable = ({
               )}
               {/* Stripe Payment */}
               {!isPaid && paymentMethod === "Stripe" && stripeClientSecret && (
+                // 一旦该组件被渲染，就会在stripe的dashboard看到两条payment intent
                 <StripePayment
                   priceInCents={Number(order.totalPrice) * 100}
                   orderId={order.id}

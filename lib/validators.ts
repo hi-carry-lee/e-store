@@ -142,7 +142,7 @@ export const insertReviewSchema = z.object({
   userId: z.string().min(1, "User is required"),
   rating: z.coerce
     .number()
-    .int()
+    .int() // 为什么这里的类型是Int，但是展示的时候有半颗星？这里想实现的是：只让用户输入整数，但是平均值有小数
     .min(1, "Rating must be at least 1")
     .max(5, "Rating must be at most 5"),
 });

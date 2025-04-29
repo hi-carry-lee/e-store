@@ -15,6 +15,7 @@ import { PAGE_SIZE } from "../constants";
 import { sendPurchaseReceipt } from "@/email";
 
 // Create order and create order items
+// in the /place-order page, user click the place order button, then this function is called
 export async function createOrder() {
   try {
     const session = await auth();
@@ -150,11 +151,10 @@ export async function createPaypalOrder(orderId: string) {
   }
 }
 
-// Once the user has entered their credentials and payment is made, we get back the order id from PayPal，and we need to approve the order
 // this action is used to approve the payment;
 export async function approvePayPalOrder(
-  orderId: string, // order id of our app
-  data: { orderID: string } // order id of Paypal
+  orderId: string,
+  data: { orderID: string }
 ) {
   try {
     // Security Check: Find the order in the database
@@ -165,7 +165,6 @@ export async function approvePayPalOrder(
     });
     if (!order) throw new Error("Order not found");
 
-    // Result Check: Check if the order is already paid
     // transfer money from the customer to the seller
     const captureData = await paypal.capturePayment(data.orderID);
     if (
@@ -376,11 +375,16 @@ export async function getAllOrders({
   page: number;
   query: string;
 }) {
+  // OrderWhereInput由 npx prisma generate 自动生成,是 Prisma 根据你的 schema 自动生成的类型
+  // 提供了所有模型的查询类型定义
   const queryFilter: Prisma.OrderWhereInput =
     query && query !== "all"
       ? {
+          // 来自 Order 模型的 user 关系
           user: {
+            // 来自 User 模型的 name 属性
             name: {
+              // startsWith 是备选方案，它是从前往后匹配，比如 tom%，这样可以避免索引失效
               contains: query,
               mode: "insensitive",
             } as Prisma.StringFilter,
@@ -398,7 +402,11 @@ export async function getAllOrders({
     include: { user: { select: { name: true } } },
   });
 
-  const dataCount = await prisma.order.count();
+  const dataCount = await prisma.order.count({
+    where: {
+      ...queryFilter,
+    },
+  });
 
   return {
     data,

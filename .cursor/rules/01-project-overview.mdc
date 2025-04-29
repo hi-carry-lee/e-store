@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# E-commerce Store Project Overview
+
+This is a Next.js 14 e-commerce application with TypeScript, Tailwind CSS, and Prisma ORM. The project follows a modern, modular architecture with clear separation of concerns.
+
+## Main Entry Points
+- [app/layout.tsx](mdc:app/layout.tsx) - Root layout component that wraps all pages
+- [app/(root)/page.tsx](mdc:app/(root)/page.tsx) - Homepage component
+- [auth.ts](mdc:auth.ts) - Authentication configuration using NextAuth.js
+- [middleware.ts](mdc:middleware.ts) - Next.js middleware for route protection
+
+## Key Configuration Files
+- [next.config.ts](mdc:next.config.ts) - Next.js configuration
+- [tailwind.config.ts](mdc:tailwind.config.ts) - Tailwind CSS configuration
+- [prisma/schema.prisma](mdc:prisma/schema.prisma) - Database schema
+
+## Directory Structure
+- `/app` - Next.js app router pages and layouts
+- `/components` - Reusable UI components
+- `/lib` - Utility functions and shared logic
+- `/hooks` - Custom React hooks
+- `/types` - TypeScript type definitions
+- `/prisma` - Database schema and migrations
+- `/public` - Static assets
+- `/email` - Email templates and handlers
+- `/db` - Database utilities and configurations
+

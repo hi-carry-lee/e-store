@@ -1,0 +1,32 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Routing and Authentication Guide
+
+## Route Structure
+The application uses Next.js App Router with the following route groups:
+- `/(root)` - Public-facing store pages
+- `/(auth)` - Authentication-related pages
+- `/admin` - Admin dashboard and management
+- `/user` - User account and settings
+- `/api` - Backend API endpoints
+
+## Authentication
+Authentication is handled by NextAuth.js with the following key files:
+- [auth.ts](mdc:auth.ts) - Main authentication configuration
+- [auth.config.ts](mdc:auth.config.ts) - Auth options and callbacks
+- [middleware.ts](mdc:middleware.ts) - Route protection middleware
+
+## Protected Routes
+- Admin routes (`/admin/*`) require admin role
+- User routes (`/user/*`) require authentication
+- API routes are protected using the middleware
+
+## Authentication Flow
+1. Users can sign in through `/sign-in`
+2. Authentication state is managed by NextAuth.js
+3. Protected routes are handled by middleware
+4. Unauthorized access redirects to `/unauthorized`
+
